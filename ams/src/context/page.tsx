@@ -1,17 +1,19 @@
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, LoginData, RegisterData } from "../types/page";
-import authService from "@/services/page";
+import { useAppDispatch, useAppSelector } from "@/app/redux/store/hooks";
+import { loginThunk, registerThunk, logoutAction } from "@/app/redux/store/slices/authSlice";
+import type { LoginData, RegisterData } from "@/types/page";
+
 type AuthContextType = {
-  user: User | null;
+  user: any;
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
 };
 
-export const AuthContext = createContext<AuthContextType>({
+const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => {},
   register: async () => {},
@@ -19,42 +21,40 @@ export const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
-  // Restore user from localStorage when app loads
+  // ✅ Restore session or redirect if needed
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
-  }, []);
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isAuthenticated, router]);
 
   const login = async (data: LoginData) => {
-    const res = await authService.login(data);
-
-    // ✅ Match backend fields
-    localStorage.setItem("accessToken", res.accessToken);
-    localStorage.setItem("refreshToken", res.refreshToken);
-    localStorage.setItem("user", JSON.stringify(res.user));
-
-    setUser(res.user);
-    router.push("/dashboard");
+    try {
+      const result = await dispatch(loginThunk(data)).unwrap();
+      console.log("✅ Login successful:", result);
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("❌ Login failed:", err);
+    }
   };
 
   const register = async (data: RegisterData) => {
-    const res = await authService.register(data);
-
-    localStorage.setItem("accessToken", res.accessToken);
-    localStorage.setItem("refreshToken", res.refreshToken);
-    localStorage.setItem("user", JSON.stringify(res.user));
-
-    setUser(res.user);
-    router.push("/dashboard");
+    try {
+      const result = await dispatch(registerThunk(data)).unwrap();
+      console.log("✅ Registered successfully:", result);
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("❌ Registration failed:", err);
+    }
   };
 
   const logout = () => {
-    localStorage.clear();
-    setUser(null);
-    router.push("/login"); // ✅ simpler path
+    dispatch(logoutAction());
+    router.push("/auth/login");
   };
 
   return (
@@ -63,3 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
+
+// ✅ Custom Hook
+export const useAuth = () => useContext(AuthContext);

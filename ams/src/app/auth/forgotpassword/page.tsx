@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/app/api/axiosInstance";
+import { Mail } from "lucide-react";
+import "../../components/forgotpassword.css";
+
+
+
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -14,11 +19,9 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setMessage(null);
     setLoading(true);
-
     try {
-      const res = await axiosInstance.get(`/auth/forgot-password?email=${email}`);
-      setMessage("✅ OTP sent to your email. Check your inbox.");
-      
+      await axiosInstance.get(`/auth/forgot-password?email=${email}`);
+      setMessage("✅ OTP sent to your email. Please check your inbox.");
       localStorage.setItem("resetEmail", email);
       setTimeout(() => router.push("/auth/verifyotp"), 2000);
     } catch (error: any) {
@@ -29,32 +32,55 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-full max-w-md"
-      >
-        <h2 className="text-2xl font-semibold text-center mb-4">Forgot Password</h2>
+    <div className="forgot-container">
+      <div className="brand-header">
+        <h1>Attendance Management System</h1>
+        <p>Secure password recovery portal</p>
+      </div>
 
-        <input
-          type="email"
-          placeholder="Enter your registered email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-4 p-2 border rounded"
-          required
-        />
+      <div className="forgot-card">
+        <div className="icon-box">
+          <Mail size={28} />
+        </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+        <h2>Forgot Password</h2>
+        <p>
+          Enter your registered email to receive an OTP for password reset.
+        </p>
+
+        <form onSubmit={handleSubmit} className="forgot-form">
+          <label htmlFor="email">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="example@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Sending OTP..." : "Send OTP"}
+          </button>
+        </form>
+
+        {message && (
+          <div
+            className={`status-message ${
+              message.startsWith("✅") ? "success" : "error"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
+        <div
+          onClick={() => router.push("/auth/login")}
+          className="back-login"
         >
-          {loading ? "Sending OTP..." : "Send OTP"}
-        </button>
-
-        {message && <p className="text-center text-sm mt-3">{message}</p>}
-      </form>
+          ← Back to Login
+        </div>
+      </div>
     </div>
   );
 }

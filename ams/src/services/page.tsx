@@ -1,5 +1,5 @@
-import axiosInstance from "../app/api/axiosInstance";
-import { AuthResponse, LoginData, RegisterData } from "../types/page";
+import axiosInstance from "@/app/api/axiosInstance";
+import type { AuthResponse, LoginData, RegisterData } from "@/types/page";
 
 const authService = {
   login: async (data: LoginData): Promise<AuthResponse> => {
@@ -11,15 +11,18 @@ const authService = {
     const res = await axiosInstance.post<AuthResponse>("/auth/register", data);
     return res.data;
   },
+
   sendOtp: async (email: string) => {
     const res = await axiosInstance.post("/auth/send-otp", { email });
     return res.data;
   },
-   verifyOtp: async (email: string, otp: string) => {
+
+  verifyOtp: async (email: string, otp: string) => {
     const res = await axiosInstance.post("/auth/verify-otp", { email, otp });
     return res.data;
   },
-    resetPassword: async (email: string, password: string) => {
+
+  resetPassword: async (email: string, password: string) => {
     const res = await axiosInstance.post("/auth/reset-password", {
       email,
       password,
@@ -27,6 +30,5 @@ const authService = {
     return res.data;
   },
 };
-
 
 export default authService;

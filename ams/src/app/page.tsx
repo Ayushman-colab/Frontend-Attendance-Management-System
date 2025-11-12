@@ -1,19 +1,42 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { CalendarCheck2 } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <h1 className="text-3xl font-bold mb-6">🏠 Welcome to AMS System</h1>
-      <button
-        onClick={() => router.push("/auth/login")}
-        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-      >
-        Go to Login
-      </button>
+    <div className="home-container">
+      {/* ======= Header ======= */}
+      <header className="home-header">
+        <div className="home-header-title">
+          <CalendarCheck2 className="home-header-icon" />
+          <h1>Attendance Management System</h1>
+        </div>
+        <button
+          onClick={() => router.push("/auth/login")}
+          className="btn-login"
+        >
+          Login
+        </button>
+      </header>
+
+      {/* ======= Hero Section ======= */}
+      <main className="home-hero">
+        <h2>Track Attendance. Manage Workforce. Boost Productivity.</h2>
+        <p>
+          A complete attendance monitoring platform designed for modern organizations.
+          Seamlessly manage attendance, track time, and analyze workforce data — securely and efficiently.
+        </p>
+
+        <button
+          onClick={() => router.push("/auth/login")}
+          className="btn-primary"
+        >
+          Go to Dashboard →
+        </button>
+      </main>
     </div>
   );
 }

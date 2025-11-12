@@ -1,93 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axiosInstance from "@/app/api/axiosInstance";
+import { useAppDispatch, useAppSelector } from "@/app/redux/store/hooks";
+import { loginThunk } from "@/app/redux/store/slices/authSlice";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ usernameOrEmail: "", password: "" });
-  const [message, setMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, loading, error } = useAppSelector((state) => state.auth);
+
+  const [formData, setFormData] = useState({
+    usernameOrEmail: "",
+    password: "",
+  });
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ 
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage(null);
-
-    try {
-      const response = await axiosInstance.post("/auth/login", formData);
-      const { accessToken, refreshToken, user } = response.data;
-
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      setMessage("✅ Login successful! Redirecting...");
-      setTimeout(() => router.push("/dashboard"), 1500);
-    } catch (error: any) {
-      console.error(error);
-      setMessage(error.response?.data?.message || "❌ Invalid credentials.");
-    } finally {
-      setLoading(false);
-    }
+    dispatch(loginThunk(formData)); // Redux thunk handles API + token storage
   };
 
-  const handleForgotPassword = () => {
-    router.push("/auth/forgotpassword");
-  };
+  // ✅ Redirect if already logged in
+ useEffect(() => {
+  console.log("Auth changed:", isAuthenticated);
+  if (isAuthenticated) {
+    console.log("✅ Redirecting to /dashboard...");
+    router.push("/dashboard");
+  }
+}, [isAuthenticated, router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-full max-w-md"
-      >
-        <h2 className="text-2xl font-semibold text-center mb-4">Login</h2>
+    <div className="login-container">
+      <form onSubmit={handleSubmit} className="login-card">
+        <h2 className="login-title">Welcome Back 👋</h2>
+        <p className="login-subtitle">Sign in to your account to continue</p>
 
         <input
           name="usernameOrEmail"
           placeholder="Username or Email"
           onChange={handleChange}
           value={formData.usernameOrEmail}
-          className="w-full mb-3 p-2 border rounded"
+          className="login-input"
           required
         />
+
         <input
           type="password"
           name="password"
           placeholder="Password"
           onChange={handleChange}
           value={formData.password}
-          className="w-full mb-4 p-2 border rounded"
+          className="login-input"
           required
         />
 
-        <div className="flex justify-end mb-4">
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            className="text-sm text-blue-600 hover:underline"
-          >
+        <div className="login-forgot">
+          <button type="button" onClick={() => router.push("/auth/forgotpassword")}>
             Forgot Password?
           </button>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
-        >
+        <button type="submit" disabled={loading} className="login-btn">
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {message && (
-          <p className="text-center text-sm mt-3 text-gray-700">{message}</p>
-        )}
+        {error && <p className="login-message text-red-500">{error}</p>}
       </form>
     </div>
   );

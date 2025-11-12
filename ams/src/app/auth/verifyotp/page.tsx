@@ -1,5 +1,6 @@
 "use client";
 
+import "../../components/verifyotp.css";  // ✅ Correct import
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/app/api/axiosInstance";
@@ -17,14 +18,11 @@ export default function VerifyOtpPage() {
     setMessage(null);
 
     try {
-      // ✅ Backend expects email + otp as request params
       const response = await axiosInstance.post(`/auth/verify-otp?email=${savedEmail}&otp=${otp}`);
-
-      const resetToken = response.data.resetToken; // store backend token if returned
+      const resetToken = response.data.resetToken;
       localStorage.setItem("resetToken", resetToken);
-
       setMessage("✅ OTP verified successfully!");
-      setTimeout(() => router.push("/auth/resetpassword"));
+      setTimeout(() => router.push("/auth/resetpassword"), 2000);
     } catch (error: any) {
       setMessage(error.response?.data?.message || "❌ Invalid OTP. Try again.");
     } finally {
@@ -33,30 +31,36 @@ export default function VerifyOtpPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleVerify}
-        className="bg-white p-6 rounded-lg shadow-md w-full max-w-md"
-      >
-        <h2 className="text-2xl font-semibold text-center mb-4">Verify OTP</h2>
+    <div className="verifyotp-page">
+      <form onSubmit={handleVerify} className="verifyotp-card">
+        <h2>Verify OTP</h2>
+        <p>Enter the OTP sent to your email</p>
 
         <input
-          placeholder="Enter OTP"
+          placeholder="••••••"
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
-          className="w-full mb-4 p-2 border rounded"
+          className="verifyotp-input"
           required
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+          className="verifyotp-btn"
         >
           {loading ? "Verifying..." : "Verify OTP"}
         </button>
 
-        {message && <p className="text-center text-sm mt-3">{message}</p>}
+        {message && (
+          <p
+            className={`verifyotp-message ${
+              message.startsWith("✅") ? "success" : "error"
+            }`}
+          >
+            {message}
+          </p>
+        )}
       </form>
     </div>
   );
