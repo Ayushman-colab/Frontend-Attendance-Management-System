@@ -1,9 +1,16 @@
+// 📁 src/services/authService.ts
 import axiosInstance from "@/app/api/axiosInstance";
 import type { AuthResponse, LoginData, RegisterData } from "@/types/page";
 
 const authService = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     const res = await axiosInstance.post<AuthResponse>("/auth/login", data);
+
+    if (res.data.accessToken && res.data.refreshToken) {
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+    }
+
     return res.data;
   },
 
@@ -28,6 +35,21 @@ const authService = {
       password,
     });
     return res.data;
+  },
+
+  countUsers: async () => {
+    const res = await axiosInstance.get("/users/stats/count");
+    return res.data; 
+  },
+
+  countActiveUsers: async () => {
+    const res = await axiosInstance.get("/users/stats/active-count");
+    return res.data; 
+  },
+  
+  countInActiveUsers: async () => {
+    const res = await axiosInstance.get("/users/stats/inactive-count");
+    return res.data; 
   },
 };
 

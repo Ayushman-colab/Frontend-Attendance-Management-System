@@ -63,7 +63,7 @@ axiosInstance.interceptors.response.use(
 
         // 🔄 Call backend refresh endpoint
         const res = await axios.post(
-          "http://localhost:8080/api/auth/refresh",
+          `${axiosInstance.defaults.baseURL}/auth/refresh`,
           { refreshToken },
           { headers: { "Content-Type": "application/json" } }
         );

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import authService from "@/services/page";
+import authService from "@/services/authService";
 import type { AuthResponse, LoginData, RegisterData, User } from "@/types/page";
 import axiosInstance from "@/app/api/axiosInstance";
 

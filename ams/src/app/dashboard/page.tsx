@@ -1,14 +1,56 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect , useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/app/redux/store/hooks";
 import { logoutAction } from "@/app/redux/store/slices/authSlice";
+import authService from "@/services/authService";
+
 
 export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const [userCount, setUserCount] = useState<number | null>(null);
+  const [countActiveUsers, setcountActiveUsers] = useState<number | null>(null);
+  const [countInActiveUsers, setcountInActiveUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        const data = await authService.countInActiveUsers();
+        setcountInActiveUsers(data.count || data); // adjust if API returns { count: number }
+      } catch (err) {
+        console.error("Failed to fetch user count:", err);
+      }
+    };
+    fetchUserCount();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        const data = await authService.countUsers();
+        setUserCount(data.count || data); // adjust if API returns { count: number }
+      } catch (err) {
+        console.error("Failed to fetch user count:", err);
+      }
+    };
+    fetchUserCount();
+  }, []);
+
+    useEffect(() => {
+    const fetchcountActiveUsers = async () => {
+      try {
+        const data = await authService.countActiveUsers();
+        setcountActiveUsers(data.count || data); // adjust if API returns { count: number }
+      } catch (err) {
+        console.error("Failed to fetch user count:", err);
+      }
+    };
+    fetchcountActiveUsers();
+  }, []);
 
   // ✅ Redirect to login if not authenticated
   useEffect(() => {
@@ -49,9 +91,31 @@ export default function DashboardPage() {
 
         <div className="dashboard-grid">
           <DashboardCard
+            title="Users"
+            description={
+              userCount !== null
+                ? `${userCount}`
+                : "Loading user count..."
+            }
+            onClick={() => router.push("/dashboard/users/allusers")}
+          />
+          <DashboardCard
             title="Active Users"
-            description="View all currently active users in the system"
-            onClick={() => router.push("/dashboard/users")}
+            description={
+              userCount !== null
+                ? `${countActiveUsers}`
+                : "Loading user count..."
+            }
+            onClick={() => router.push("/dashboard/users/activeusers")}
+          />
+          <DashboardCard
+            title="Inactive Users"
+            description={
+              userCount !== null
+                ? `${countInActiveUsers}`
+                : "Loading user count..."
+            }
+            onClick={() => router.push("/dashboard/users/inactiveusers")}
           />
           <DashboardCard
             title="Roles"
